@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // 🔥 Riverpod
+
 import 'core/theme/app_theme.dart';
 import 'core/services/firebase_service.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
@@ -8,7 +10,11 @@ void main() async {
 
   await FirebaseService.init();
 
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope( // 💀 MUST for Riverpod
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
