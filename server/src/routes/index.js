@@ -5,6 +5,7 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import partyRoutes from "../modules/party/party.routes.js";
 import medicineRoutes from "../modules/medicine/medicine.routes.js";
 import orderRoutes from "../modules/order/order.routes.js";
+import ledgerRoutes from "../modules/ledger/ledger.routes.js";
 
 const router = express.Router();
 
@@ -24,5 +25,8 @@ router.use("/medicine", medicineRoutes);
 
 /// 📦 Order Routes
 router.use("/order", orderRoutes);
+
+/// 💰 Ledger Routes
+router.use("/ledger", ledgerRoutes);
 
 export default router;
