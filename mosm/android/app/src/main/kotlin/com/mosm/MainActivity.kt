@@ -1,4 +1,4 @@
-package com.example.mosm
+package com.mosm
 
 import io.flutter.embedding.android.FlutterActivity
 
