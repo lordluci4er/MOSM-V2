@@ -1,0 +1,1 @@
+// medicine_model.dart
