@@ -15,30 +15,80 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   final repo = AuthRepositoryImpl();
   final authService = AuthService();
 
-  Future<void> login() async {
-    final user = await authService.signInWithGoogle();
-    if (user == null) return;
+  // =====================================================
+  // 🔥 LOGIN (FINAL FIXED VERSION)
+  // =====================================================
+  Future<UserEntity?> login() async {
+    try {
+      /// 1. Firebase Login
+      final firebaseUser = await authService.signInWithGoogle();
+      if (firebaseUser == null) return null;
 
-    final token = await user.getIdToken();
+      /// 2. Get Token (clean way)
+      final token = await authService.getToken();
 
-    if (token == null) {
-      throw Exception("Token not found");
+      /// 3. Backend call (/auth/me inside repo)
+      final result = await repo.login(token);
+
+      /// 4. Save state
+      state = result;
+
+      return result;
+    } catch (e) {
+      print("LOGIN ERROR: $e");
+      return null;
     }
-
-    final result = await repo.login(token);
-    state = result;
   }
 
-  Future<void> setupShop(
+  // =====================================================
+  // 🏪 SHOP SETUP
+  // =====================================================
+  Future<UserEntity?> setupShop(
       String name, String phone, String address) async {
-    final user = authService.currentUser!;
-    final token = await user.getIdToken();
+    try {
+      final token = await authService.getToken();
 
-    if (token == null) {
-      throw Exception("Token not found");
+      final result = await repo.setupShop(
+        token,
+        name,
+        phone,
+        address,
+      );
+
+      state = result;
+
+      return result;
+    } catch (e) {
+      print("SETUP ERROR: $e");
+      return null;
     }
+  }
 
-    final result = await repo.setupShop(token, name, phone, address);
-    state = result;
+  // =====================================================
+  // 🔄 AUTO LOGIN CHECK (IMPORTANT 🔥)
+  // =====================================================
+  Future<UserEntity?> checkAuth() async {
+    try {
+      if (!authService.isLoggedIn) return null;
+
+      final token = await authService.getToken();
+
+      final result = await repo.login(token);
+
+      state = result;
+
+      return result;
+    } catch (e) {
+      print("CHECK AUTH ERROR: $e");
+      return null;
+    }
+  }
+
+  // =====================================================
+  // 🚪 LOGOUT
+  // =====================================================
+  Future<void> logout() async {
+    await authService.logout();
+    state = null;
   }
 }

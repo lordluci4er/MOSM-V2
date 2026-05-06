@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  /// 🔒 Singleton (important for consistency)
+  /// 🔒 Singleton
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
@@ -10,15 +10,23 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  /// 👤 Current user (getter)
+  /// 👤 Current user
   User? get currentUser => _auth.currentUser;
 
-  /// 👤 Safe method version
-  User? getCurrentUser() => _auth.currentUser;
+  /// 🔁 Login status
+  bool get isLoggedIn => _auth.currentUser != null;
 
-  /// 🔐 Google Sign-In
+  /// 🔄 Auth state stream
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // =====================================================
+  // 🔐 GOOGLE SIGN-IN (FIXED VERSION 💀)
+  // =====================================================
   Future<User?> signInWithGoogle() async {
     try {
+      /// 🔥 FORCE ACCOUNT PICKER (IMPORTANT FIX)
+      await _googleSignIn.signOut();
+
       final googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) return null;
@@ -41,7 +49,9 @@ class AuthService {
     }
   }
 
-  /// 🔑 Get Firebase ID Token (backend use)
+  // =====================================================
+  // 🔑 TOKEN (CLEAN VERSION)
+  // =====================================================
   Future<String> getToken({bool forceRefresh = true}) async {
     try {
       final user = _auth.currentUser;
@@ -62,13 +72,9 @@ class AuthService {
     }
   }
 
-  /// 🔁 Check login status
-  bool get isLoggedIn => _auth.currentUser != null;
-
-  /// 🔄 Listen auth changes (optional powerful)
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
-
-  /// 🚪 Logout
+  // =====================================================
+  // 🚪 LOGOUT
+  // =====================================================
   Future<void> logout() async {
     try {
       await _googleSignIn.signOut();

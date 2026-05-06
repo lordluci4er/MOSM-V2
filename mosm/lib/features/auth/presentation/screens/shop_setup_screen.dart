@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/providers/auth_provider.dart';
+import '../../../analytics/presentation/screens/dashboard_screen.dart';
 
 class ShopSetupScreen extends ConsumerStatefulWidget {
   const ShopSetupScreen({super.key});
@@ -24,21 +25,42 @@ class _ShopSetupScreenState extends ConsumerState<ShopSetupScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: name, decoration: const InputDecoration(labelText: "Shop Name")),
-            TextField(controller: phone, decoration: const InputDecoration(labelText: "Phone")),
-            TextField(controller: address, decoration: const InputDecoration(labelText: "Address")),
+            TextField(
+              controller: name,
+              decoration: const InputDecoration(labelText: "Shop Name"),
+            ),
+            TextField(
+              controller: phone,
+              decoration: const InputDecoration(labelText: "Phone"),
+            ),
+            TextField(
+              controller: address,
+              decoration: const InputDecoration(labelText: "Address"),
+            ),
 
             const SizedBox(height: 20),
 
             ElevatedButton(
               onPressed: () async {
-                await ref.read(authProvider.notifier).setupShop(
-                      name.text,
-                      phone.text,
-                      address.text,
-                    );
+                final result =
+                    await ref.read(authProvider.notifier).setupShop(
+                          name.text,
+                          phone.text,
+                          address.text,
+                        );
 
-                Navigator.pop(context);
+                /// 🔥 SUCCESS CHECK
+                if (result != null) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const DashboardScreen()),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Setup failed")),
+                  );
+                }
               },
               child: const Text("Create My Store"),
             )
