@@ -5,28 +5,32 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  /// 🔹 Get current user
+  /// 🔹 Get current logged-in user
   User? get currentUser => _auth.currentUser;
 
   /// 🔐 Google Sign-In
   Future<User?> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null;
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null;
 
-    final googleAuth = await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    final userCredential =
-        await _auth.signInWithCredential(credential);
+      final userCredential =
+          await _auth.signInWithCredential(credential);
 
-    return userCredential.user;
+      return userCredential.user;
+    } catch (e) {
+      throw Exception("Google Sign-In failed: $e");
+    }
   }
 
-  /// 🔑 Get Firebase ID Token (Backend ke liye)
+  /// 🔑 Get Firebase ID Token (Backend API ke liye)
   Future<String> getToken() async {
     final user = _auth.currentUser;
 
@@ -36,14 +40,14 @@ class AuthService {
 
     final token = await user.getIdToken();
 
-    if (token == null) {
+    if (token == null || token.isEmpty) {
       throw Exception("Failed to get token");
     }
 
     return token;
   }
 
-  /// 🚪 Logout
+  /// 🚪 Logout (Google + Firebase)
   Future<void> logout() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
