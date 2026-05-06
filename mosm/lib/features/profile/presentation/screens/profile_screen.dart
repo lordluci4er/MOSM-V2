@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../../shared/providers/auth_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   final String shopName;
   final String phone;
   final String address;
@@ -17,11 +17,19 @@ class ProfileScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() =>
+      _ProfileScreenState();
+}
+
+class _ProfileScreenState
+    extends ConsumerState<ProfileScreen> {
+  bool isDeleting = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.black,
 
-      /// 🔥 APP BAR
       appBar: AppBar(
         title: const Text("Profile"),
         backgroundColor: AppColors.black,
@@ -46,7 +54,8 @@ class ProfileScreen extends ConsumerWidget {
                     height: 70,
                     width: 70,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color:
+                          AppColors.primary.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -55,20 +64,16 @@ class ProfileScreen extends ConsumerWidget {
                       size: 32,
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
                   Text(
-                    shopName,
+                    widget.shopName,
                     style: const TextStyle(
                       color: AppColors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   const Text(
                     "Medical Store",
                     style: TextStyle(
@@ -82,44 +87,41 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            /// INFO CARDS
             _infoCard(
               icon: Icons.phone,
               title: "Phone",
-              value: phone,
+              value: widget.phone,
             ),
 
             _infoCard(
               icon: Icons.location_on,
               title: "Address",
-              value: address,
+              value: widget.address,
             ),
 
             const Spacer(),
 
-            /// 🔥 LOGOUT BUTTON (LOGIC ADDED)
-            GestureDetector(
+            /// 🚪 LOGOUT
+            _actionButton(
+              text: "Logout",
+              color: AppColors.danger,
               onTap: () async {
-                await ref.read(authProvider.notifier).logout();
+                await ref
+                    .read(authProvider.notifier)
+                    .logout();
               },
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.danger.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    "Logout",
-                    style: TextStyle(
-                      color: AppColors.danger,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// 🧨 DELETE ACCOUNT
+            _actionButton(
+              text: isDeleting
+                  ? "Deleting..."
+                  : "Delete Account",
+              color: Colors.red,
+              onTap: isDeleting ? null : _confirmDelete,
+              isLoading: isDeleting,
             ),
           ],
         ),
@@ -127,7 +129,115 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  /// 🔥 REUSABLE INFO CARD
+  // =====================================================
+  // 🔥 CONFIRM DELETE
+  // =====================================================
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.dark,
+        title: const Text(
+          "Delete Account?",
+          style: TextStyle(color: AppColors.white),
+        ),
+        content: const Text(
+          "This will permanently delete your account and all data.",
+          style: TextStyle(color: AppColors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteAccount();
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // 🧨 DELETE ACCOUNT
+  // =====================================================
+  Future<void> _deleteAccount() async {
+    setState(() => isDeleting = true);
+
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .deleteAccount();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Account deleted successfully"),
+        ),
+      );
+    } catch (e) {
+      setState(() => isDeleting = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Delete failed: $e"),
+        ),
+      );
+    }
+  }
+
+  // =====================================================
+  // 🔥 BUTTON
+  // =====================================================
+  Widget _actionButton({
+    required String text,
+    required Color color,
+    required VoidCallback? onTap,
+    bool isLoading = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding:
+            const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.red,
+                  ),
+                )
+              : Text(
+                  text,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  // =====================================================
+  // 🔥 INFO CARD
+  // =====================================================
   Widget _infoCard({
     required IconData icon,
     required String title,
@@ -144,7 +254,8 @@ class ProfileScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
+          Icon(icon,
+              color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

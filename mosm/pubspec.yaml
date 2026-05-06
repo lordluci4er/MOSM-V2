@@ -22,6 +22,7 @@ dependencies:
 
   # 🌐 API Calls
   http: ^1.2.2
+  dio: ^5.4.0
 
   # ⚡ State Management (recommended)
   flutter_riverpod: ^2.5.1

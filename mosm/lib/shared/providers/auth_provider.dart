@@ -20,17 +20,13 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   // =====================================================
   Future<UserEntity?> login() async {
     try {
-      /// 1. Firebase Login
       final firebaseUser = await authService.signInWithGoogle();
       if (firebaseUser == null) return null;
 
-      /// 2. Get Token
       final token = await authService.getToken();
 
-      /// 3. Backend call
       final result = await repo.login(token);
 
-      /// 4. Save state
       state = result;
 
       return result;
@@ -88,16 +84,29 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   }
 
   // =====================================================
-  // 🚪 LOGOUT (FINAL)
+  // 🚪 LOGOUT
   // =====================================================
   Future<void> logout() async {
     try {
       await authService.logout();
+      state = null;
+    } catch (e) {
+      print("LOGOUT ERROR: $e");
+    }
+  }
+
+  // =====================================================
+  // 🧨 DELETE ACCOUNT
+  // =====================================================
+  Future<void> deleteAccount() async {
+    try {
+      await authService.deleteAccount();
 
       /// 🔥 clear state
       state = null;
     } catch (e) {
-      print("LOGOUT ERROR: $e");
+      print("DELETE ACCOUNT ERROR: $e");
+      rethrow; // 👈 important for UI handling
     }
   }
 }
