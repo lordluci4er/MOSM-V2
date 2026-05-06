@@ -2,16 +2,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
+  /// 🔒 Singleton (important for consistency)
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+  AuthService._internal();
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  /// 🔹 Current logged-in user (getter)
+  /// 👤 Current user (getter)
   User? get currentUser => _auth.currentUser;
 
-  /// 🔹 Alternate method (for clean architecture usage)
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
+  /// 👤 Safe method version
+  User? getCurrentUser() => _auth.currentUser;
 
   /// 🔐 Google Sign-In
   Future<User?> signInWithGoogle() async {
@@ -31,32 +34,47 @@ class AuthService {
           await _auth.signInWithCredential(credential);
 
       return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception("Firebase Auth Error: ${e.message}");
     } catch (e) {
       throw Exception("Google Sign-In failed: $e");
     }
   }
 
-  /// 🔑 Get Firebase ID Token (Backend API ke liye)
-  Future<String> getToken() async {
-    final user = _auth.currentUser;
+  /// 🔑 Get Firebase ID Token (backend use)
+  Future<String> getToken({bool forceRefresh = true}) async {
+    try {
+      final user = _auth.currentUser;
 
-    if (user == null) {
-      throw Exception("User not logged in");
+      if (user == null) {
+        throw Exception("User not logged in");
+      }
+
+      final token = await user.getIdToken(forceRefresh);
+
+      if (token == null || token.isEmpty) {
+        throw Exception("Invalid token received");
+      }
+
+      return token;
+    } catch (e) {
+      throw Exception("Token fetch failed: $e");
     }
-
-    /// 🔥 Force refresh token (recommended)
-    final token = await user.getIdToken(true);
-
-    if (token == null || token.isEmpty) {
-      throw Exception("Failed to get valid token");
-    }
-
-    return token;
   }
 
-  /// 🚪 Logout (Google + Firebase)
+  /// 🔁 Check login status
+  bool get isLoggedIn => _auth.currentUser != null;
+
+  /// 🔄 Listen auth changes (optional powerful)
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  /// 🚪 Logout
   Future<void> logout() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    try {
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+    } catch (e) {
+      throw Exception("Logout failed: $e");
+    }
   }
 }
