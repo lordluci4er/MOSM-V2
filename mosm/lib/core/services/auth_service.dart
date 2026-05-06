@@ -5,13 +5,14 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  /// 🔹 Get current logged-in user
+  /// 🔹 Current logged-in user
   User? get currentUser => _auth.currentUser;
 
   /// 🔐 Google Sign-In
   Future<User?> signInWithGoogle() async {
     try {
       final googleUser = await _googleSignIn.signIn();
+
       if (googleUser == null) return null;
 
       final googleAuth = await googleUser.authentication;
@@ -38,10 +39,12 @@ class AuthService {
       throw Exception("User not logged in");
     }
 
-    final token = await user.getIdToken();
+    /// 🔥 force refresh (optional but good)
+    final token = await user.getIdToken(true);
 
+    /// ✅ FIX: null + empty check
     if (token == null || token.isEmpty) {
-      throw Exception("Failed to get token");
+      throw Exception("Failed to get valid token");
     }
 
     return token;
