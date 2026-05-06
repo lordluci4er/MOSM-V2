@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../../domain/entities/party_entity.dart';
 
 class PartyRepositoryImpl {
-  final String baseUrl = "http://10.0.2.2:5000/api";
+  final String baseUrl = "https://mosm-v2.onrender.com/api";
 
   Future<List<PartyEntity>> getParties(String token) async {
     final res = await http.get(

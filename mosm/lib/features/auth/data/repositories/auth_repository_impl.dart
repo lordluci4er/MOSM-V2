@@ -5,7 +5,7 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final String baseUrl = "http://10.0.2.2:5000/api"; // Android emulator
+  final String baseUrl = "https://mosm-v2.onrender.com/api"; // Android emulator
 
   @override
   Future<UserEntity> login(String token) async {
