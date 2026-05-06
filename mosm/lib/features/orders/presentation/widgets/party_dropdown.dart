@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/colors.dart';
 import '../../../../features/party/domain/entities/party_entity.dart';
 
 class PartyDropdown extends StatelessWidget {
@@ -15,17 +16,43 @@ class PartyDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: selectedId,
-      hint: const Text("Select Party"),
-      isExpanded: true,
-      items: parties.map((p) {
-        return DropdownMenuItem(
-          value: p.id,
-          child: Text(p.name),
-        );
-      }).toList(),
-      onChanged: (val) => onChanged(val!),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.dark,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedId,
+          dropdownColor: AppColors.card,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down,
+              color: AppColors.grey),
+
+          /// 🔥 HINT
+          hint: const Text(
+            "Select Party",
+            style: TextStyle(color: AppColors.grey),
+          ),
+
+          /// 🔥 ITEMS
+          items: parties.map((p) {
+            return DropdownMenuItem(
+              value: p.id,
+              child: Text(
+                p.name,
+                style: const TextStyle(color: AppColors.white),
+              ),
+            );
+          }).toList(),
+
+          /// 🔥 ON CHANGE
+          onChanged: (val) => onChanged(val!),
+        ),
+      ),
     );
   }
 }

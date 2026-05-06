@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/colors.dart';
 import '../../../../shared/providers/ledger_provider.dart';
 import '../widgets/transaction_tile.dart';
 
@@ -32,57 +33,125 @@ class _LedgerDetailScreenState
     final summary = data["summary"] ?? {};
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.party.name)),
+      backgroundColor: AppColors.black,
+
+      /// 🔥 APP BAR
+      appBar: AppBar(
+        title: Text(widget.party.name),
+        backgroundColor: AppColors.black,
+        elevation: 0,
+      ),
+
       body: Column(
         children: [
-          /// SUMMARY 🔥
-          Card(
+          /// 🔥 SUMMARY CARD
+          Container(
             margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text("Bill: ₹ ${summary["totalBill"] ?? 0}"),
-                  Text("Payment: ₹ ${summary["totalPayment"] ?? 0}"),
-                  Text(
-                    "Due: ₹ ${summary["due"] ?? 0}",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _summaryItem(
+                    "Bill", "₹ ${summary["totalBill"] ?? 0}",
+                    AppColors.warning),
+                _summaryItem(
+                    "Paid", "₹ ${summary["totalPayment"] ?? 0}",
+                    AppColors.success),
+                _summaryItem(
+                    "Due", "₹ ${summary["due"] ?? 0}",
+                    AppColors.danger),
+              ],
             ),
           ),
 
+          /// 🔥 LIST
           Expanded(
-            child: ListView.builder(
-              itemCount: entries.length,
-              itemBuilder: (context, index) {
-                return TransactionTile(tx: entries[index]);
-              },
-            ),
+            child: entries.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No transactions yet",
+                      style: TextStyle(color: AppColors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.dark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: TransactionTile(tx: entries[index]),
+                      );
+                    },
+                  ),
           ),
 
-          /// ACTION BUTTONS
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () => _showDialog(context, true),
-                child: const Text("Add Bill"),
+          /// 🔥 ACTION BUTTONS
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: AppColors.black,
+              border: Border(
+                top: BorderSide(color: AppColors.border),
               ),
-              ElevatedButton(
-                onPressed: () => _showDialog(context, false),
-                child: const Text("Add Payment"),
-              ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.warning,
+                    ),
+                    onPressed: () => _showDialog(context, true),
+                    child: const Text("Add Bill"),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                    ),
+                    onPressed: () => _showDialog(context, false),
+                    child: const Text("Add Payment"),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10)
         ],
       ),
     );
   }
 
+  /// 🔥 SUMMARY ITEM
+  Widget _summaryItem(String title, String value, Color color) {
+    return Column(
+      children: [
+        Text(title, style: const TextStyle(color: AppColors.grey)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 🔥 DIALOG (UPGRADED)
   void _showDialog(BuildContext context, bool isBill) {
     final amount = TextEditingController();
     final note = TextEditingController();
@@ -91,16 +160,40 @@ class _LedgerDetailScreenState
       context: context,
       builder: (_) {
         return AlertDialog(
-          title: Text(isBill ? "Add Bill" : "Add Payment"),
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: Text(
+            isBill ? "Add Bill" : "Add Payment",
+            style: const TextStyle(color: AppColors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: amount, keyboardType: TextInputType.number),
-              TextField(controller: note),
+              TextField(
+                controller: amount,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppColors.white),
+                decoration: _inputDecoration("Amount"),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: note,
+                style: const TextStyle(color: AppColors.white),
+                decoration: _inputDecoration("Note (optional)"),
+              ),
             ],
           ),
           actions: [
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: AppColors.grey),
+              ),
+            ),
+            ElevatedButton(
               onPressed: () async {
                 final amt = double.tryParse(amount.text) ?? 0;
 
@@ -125,6 +218,19 @@ class _LedgerDetailScreenState
           ],
         );
       },
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: AppColors.grey),
+      filled: true,
+      fillColor: AppColors.dark,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
     );
   }
 }

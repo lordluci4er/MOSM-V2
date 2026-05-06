@@ -8,7 +8,11 @@ class AuthService {
   AuthService._internal();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  /// 🔥 Google SignIn
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+  );
 
   /// 👤 Current user
   User? get currentUser => _auth.currentUser;
@@ -20,13 +24,10 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // =====================================================
-  // 🔐 GOOGLE SIGN-IN (FIXED VERSION 💀)
+  // 🔐 GOOGLE SIGN-IN
   // =====================================================
   Future<User?> signInWithGoogle() async {
     try {
-      /// 🔥 FORCE ACCOUNT PICKER (IMPORTANT FIX)
-      await _googleSignIn.signOut();
-
       final googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) return null;
@@ -50,9 +51,9 @@ class AuthService {
   }
 
   // =====================================================
-  // 🔑 TOKEN (CLEAN VERSION)
+  // 🔑 TOKEN (FIXED ✅)
   // =====================================================
-  Future<String> getToken({bool forceRefresh = true}) async {
+  Future<String> getToken({bool forceRefresh = false}) async {
     try {
       final user = _auth.currentUser;
 
@@ -63,7 +64,7 @@ class AuthService {
       final token = await user.getIdToken(forceRefresh);
 
       if (token == null || token.isEmpty) {
-        throw Exception("Invalid token received");
+        throw Exception("Token is null or empty");
       }
 
       return token;

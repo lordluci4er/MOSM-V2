@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthApi {
-  final String baseUrl = "http://10.0.2.2:5000/api";
+  final String baseUrl = "https://mosm-v2.onrender.com/api";
 
   Future<Map<String, dynamic>> getMe(String token) async {
     final res = await http.get(
