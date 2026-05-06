@@ -1,1 +1,3 @@
-// order_repository.dart
+abstract class OrderRepository {
+  Future<void> createOrder(String partyId, List<String> medicines);
+}
