@@ -51,7 +51,7 @@ class AuthService {
   }
 
   // =====================================================
-  // 🔑 TOKEN (FIXED ✅)
+  // 🔑 TOKEN
   // =====================================================
   Future<String> getToken({bool forceRefresh = false}) async {
     try {
@@ -74,11 +74,14 @@ class AuthService {
   }
 
   // =====================================================
-  // 🚪 LOGOUT
+  // 🚪 LOGOUT (FINAL)
   // =====================================================
   Future<void> logout() async {
     try {
+      /// 🔥 Google logout (IMPORTANT)
       await _googleSignIn.signOut();
+
+      /// 🔥 Firebase logout
       await _auth.signOut();
     } catch (e) {
       throw Exception("Logout failed: $e");

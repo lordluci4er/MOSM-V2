@@ -12,11 +12,11 @@ final authProvider =
 class AuthNotifier extends StateNotifier<UserEntity?> {
   AuthNotifier() : super(null);
 
-  final repo = AuthRepositoryImpl();
-  final authService = AuthService();
+  final AuthRepositoryImpl repo = AuthRepositoryImpl();
+  final AuthService authService = AuthService();
 
   // =====================================================
-  // 🔥 LOGIN (FINAL FIXED VERSION)
+  // 🔥 LOGIN
   // =====================================================
   Future<UserEntity?> login() async {
     try {
@@ -24,10 +24,10 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
       final firebaseUser = await authService.signInWithGoogle();
       if (firebaseUser == null) return null;
 
-      /// 2. Get Token (clean way)
+      /// 2. Get Token
       final token = await authService.getToken();
 
-      /// 3. Backend call (/auth/me inside repo)
+      /// 3. Backend call
       final result = await repo.login(token);
 
       /// 4. Save state
@@ -44,7 +44,10 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   // 🏪 SHOP SETUP
   // =====================================================
   Future<UserEntity?> setupShop(
-      String name, String phone, String address) async {
+    String name,
+    String phone,
+    String address,
+  ) async {
     try {
       final token = await authService.getToken();
 
@@ -65,7 +68,7 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   }
 
   // =====================================================
-  // 🔄 AUTO LOGIN CHECK (IMPORTANT 🔥)
+  // 🔄 AUTO LOGIN CHECK
   // =====================================================
   Future<UserEntity?> checkAuth() async {
     try {
@@ -85,10 +88,16 @@ class AuthNotifier extends StateNotifier<UserEntity?> {
   }
 
   // =====================================================
-  // 🚪 LOGOUT
+  // 🚪 LOGOUT (FINAL)
   // =====================================================
   Future<void> logout() async {
-    await authService.logout();
-    state = null;
+    try {
+      await authService.logout();
+
+      /// 🔥 clear state
+      state = null;
+    } catch (e) {
+      print("LOGOUT ERROR: $e");
+    }
   }
 }

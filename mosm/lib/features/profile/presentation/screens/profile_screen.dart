@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfileScreen extends StatelessWidget {
+import '../../../../core/theme/colors.dart';
+import '../../../../shared/providers/auth_provider.dart';
+
+class ProfileScreen extends ConsumerWidget {
   final String shopName;
   final String phone;
   final String address;
@@ -14,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.black,
 
@@ -39,7 +42,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  /// 🔥 AVATAR
                   Container(
                     height: 70,
                     width: 70,
@@ -56,7 +58,6 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  /// 🔥 SHOP NAME
                   Text(
                     shopName,
                     style: const TextStyle(
@@ -81,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            /// 🔥 INFO CARDS
+            /// INFO CARDS
             _infoCard(
               icon: Icons.phone,
               title: "Phone",
@@ -96,20 +97,26 @@ class ProfileScreen extends StatelessWidget {
 
             const Spacer(),
 
-            /// 🔥 LOGOUT BUTTON (UI only)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: AppColors.danger,
-                    fontWeight: FontWeight.w500,
+            /// 🔥 LOGOUT BUTTON (LOGIC ADDED)
+            GestureDetector(
+              onTap: () async {
+                await ref.read(authProvider.notifier).logout();
+              },
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    "Logout",
+                    style: TextStyle(
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -137,15 +144,12 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          /// ICON
           Icon(icon, color: AppColors.primary, size: 20),
-
           const SizedBox(width: 12),
-
-          /// TEXT
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
