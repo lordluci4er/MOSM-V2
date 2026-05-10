@@ -17,6 +17,9 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
+  /// 🔥 PAGE CONTROLLER
+  final PageController _pageController = PageController();
+
   final screens = [
     const DashboardScreen(),
     const InboxScreen(),
@@ -30,68 +33,149 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.black,
 
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: screens[currentIndex],
+      /// 🔥 SWIPE NAVIGATION ENABLED
+      body: PageView(
+        controller: _pageController,
+
+        /// 👇 Smooth iOS-like feel
+        physics: const BouncingScrollPhysics(),
+
+        /// 🔥 sync bottom nav
+        onPageChanged: (index) {
+          setState(() => currentIndex = index);
+        },
+
+        children: screens,
       ),
 
+      /// 🔥 PREMIUM BOTTOM NAV
       bottomNavigationBar: Container(
         margin: const EdgeInsets.all(12),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          vertical: 8,
+          horizontal: 6,
+        ),
         decoration: BoxDecoration(
           color: AppColors.dark,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(Icons.dashboard, "Home", 0),
-            _navItem(Icons.medical_services, "Inbox", 1),
-            _navItem(Icons.shopping_cart, "Orders", 2),
-            _navItem(Icons.account_balance_wallet, "Ledger", 3),
-            _navItem(Icons.person, "Profile", 4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.border,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
           ],
+        ),
+
+        child: SafeArea(
+          top: false,
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(Icons.dashboard_rounded, "Home", 0),
+              _navItem(Icons.medical_services_rounded,
+                  "Inbox", 1),
+              _navItem(Icons.shopping_cart_rounded,
+                  "Orders", 2),
+              _navItem(Icons.account_balance_wallet_rounded,
+                  "Ledger", 3),
+              _navItem(Icons.person_rounded, "Profile", 4),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
+  /// =====================================================
+  /// 🔥 NAV ITEM
+  /// =====================================================
+  Widget _navItem(
+    IconData icon,
+    String label,
+    int index,
+  ) {
     final isSelected = currentIndex == index;
 
     return GestureDetector(
       onTap: () {
         setState(() => currentIndex = index);
+
+        /// 🔥 PAGE ANIMATION
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
       },
+
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+        curve: Curves.easeInOut,
+
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 10,
+          vertical: 8,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isSelected ? Colors.white : AppColors.grey,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: isSelected ? Colors.white : AppColors.grey,
+
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : Colors.transparent,
+
+          borderRadius: BorderRadius.circular(16),
+
+          border: isSelected
+              ? Border.all(
+                  color: Colors.white.withOpacity(0.08),
+                )
+              : null,
+        ),
+
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+
+          child: Row(
+            key: ValueKey(isSelected),
+
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: isSelected
+                    ? Colors.white
+                    : AppColors.grey,
               ),
-            ),
-          ],
+
+              /// 🔥 SHOW LABEL ONLY WHEN ACTIVE
+              if (isSelected) ...[
+                const SizedBox(width: 8),
+
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ]
+            ],
+          ),
         ),
       ),
     );
